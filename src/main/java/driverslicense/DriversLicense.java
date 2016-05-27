@@ -5,9 +5,10 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class DriversLicense {
 
@@ -93,14 +94,6 @@ public class DriversLicense {
         this.expirationDate = expirationDate;
     }
 
-//    public Restriction[] getRestrictions() {
-//        return restrictions;
-//    }
-//
-//    public void setRestrictions(Restriction[] restrictions) {
-//        this.restrictions = restrictions;
-//    }
-
     public String getName() {
         return name;
     }
@@ -149,6 +142,9 @@ public class DriversLicense {
         this.eyeColor = eyeColor;
     }
 
+    public boolean getOrganDonor(){
+        return organDonor;
+    }
     /**
      * (include description of field order here)
      * @return
@@ -168,11 +164,14 @@ public class DriversLicense {
                 .append(endorsements).append(',')
                 .append(sex).append(',')
                 .append(federallyCompliant).append(',')
-                .append(licenseClassification);
+                .append(licenseClassification).append(',')
+                .append(organDonor).append(',')
+                .append(height).append(',')
+                .append(weight);
 
         return csvBuilder.toString();
     }
-
+    //String sampleCSV = "NAME\nMin,EYE COLOR,Brown,Blue,DATE OF BIRTH,
     public static String getCSVHeader(){
         return "NAME,ADDRESS,EYE COLOR,DATE OF BIRTH,ISSUE DATE,EXPIRATION DATE," +
                 "LICENSE NUMBER,STATE,ENDORSEMENTS,SEX,FEDERAL COMPLIANCE,CLASSIFICATION";
@@ -190,25 +189,38 @@ public class DriversLicense {
         return date;
     }
 
+    public static String removeHeader(String csv){
+        int csvIndex = csv.indexOf("\n");
+
+        if(csvIndex > -1){
+            return csv.substring(csvIndex+1, csv.length());
+        }
+        return csv;
+    }
+
     public static ArrayList<DriversLicense> deserializeFromCSV(String csv){
+        String noHeaderCVS = removeHeader(csv);
         ArrayList<DriversLicense> licensesList = new ArrayList<>();
-        String[] csvArray = csv.trim().split("\\s*,\\s*");
+        String[] csvArray = noHeaderCVS.trim().split("\\s*,\\s*");
         int numberOfLicenses = csvArray.length / 12;
         if(numberOfLicenses > 0){
             for(int i = 0; i  < numberOfLicenses; i++){
                 DriversLicense license = new DriversLicense();
-                license.setName(csvArray[(0+(i*12))]);
-                license.setAddress(csvArray[(1+(i*12))]);
-                license.setEyeColor(csvArray[(2+(i*12))]);
-                license.setDateOfBirth(convertStringToDate(csvArray[(3+(i*12))]));
-                license.setIssueDate(convertStringToDate(csvArray[(4+(i*12))]));
-                license.setExpirationDate(convertStringToDate(csvArray[(5+(i*12))]));
-                license.setLicenseNumber(csvArray[(6+(i*12))]);
-                license.setIssuingState(csvArray[(7+(i*12))]);
-                license.setEndorsements(csvArray[(8+(i*12))]);
-                license.setSex(csvArray[(9+(i*12))].charAt(0));
-                license.setFederallyCompliant(Boolean.parseBoolean(csvArray[(10+(i*12))]));
-                license.setLicenseClassification(csvArray[(11+(i*12))].charAt(0));
+                license.setName(csvArray[(0+(i*15))]);
+                license.setAddress(csvArray[(1+(i*15))]);
+                license.setEyeColor(csvArray[(2+(i*15))]);
+                license.setDateOfBirth(convertStringToDate(csvArray[(3+(i*15))]));
+                license.setIssueDate(convertStringToDate(csvArray[(4+(i*15))]));
+                license.setExpirationDate(convertStringToDate(csvArray[(5+(i*15))]));
+                license.setLicenseNumber(csvArray[(6+(i*15))]);
+                license.setIssuingState(csvArray[(7+(i*15))]);
+                license.setEndorsements(csvArray[(8+(i*15))]);
+                license.setSex(csvArray[(9+(i*15))].charAt(0));
+                license.setFederallyCompliant(Boolean.parseBoolean(csvArray[(10+(i*15))]));
+                license.setLicenseClassification(csvArray[(11+(i*15))].charAt(0));
+                license.setOrganDonor(Boolean.parseBoolean(csvArray[(12+(i*15))]));
+                license.setHeight(Integer.parseInt(csvArray[(13+(i*15))]));
+                license.setWeight(Double.parseDouble(csvArray[(14+(i*15))]));
                 licensesList.add(license);
             }
             return licensesList;
@@ -218,4 +230,43 @@ public class DriversLicense {
         }
         return null;
     }
+
+    public boolean checkDuplicateLicense(DriversLicense duplicateLicense){
+        if((name.equals(duplicateLicense.getName())) &&
+                (address.equals(duplicateLicense.getAddress()))&&
+                (eyeColor.equals(duplicateLicense.getEyeColor()))&&
+                (dateOfBirth.equals(duplicateLicense.getDateOfBirth()))&&
+                (issueDate.equals(duplicateLicense.getIssueDate()))&&
+                (expirationDate.equals(duplicateLicense.getExpirationDate()))&&
+                (licenseNumber.equals(duplicateLicense.getLicenseNumber()))&&
+                (issuingState.equals(duplicateLicense.getIssuingState()))&&
+                (endorsements.equals(duplicateLicense.getEndorsements()))&&
+                (sex == duplicateLicense.getSex())&&
+                (federallyCompliant == duplicateLicense.isFederallyCompliant())&&
+                (licenseClassification == duplicateLicense.getLicenseClassification())&&
+                (organDonor == duplicateLicense.getOrganDonor())&&
+                (height == duplicateLicense.getHeight())&&
+                (weight == duplicateLicense.getWeight())) {
+            return true;
+        }
+        return false;
+    }
+
+    public String toString(){
+        String stringValue = "DriversLicense\n" +
+                "name='" + name + '\n' +
+                "address='" + address + '\n' +
+                "eyeColor='" + eyeColor  + '\n' +
+                "licenseNumber='" + licenseNumber + '\n' +
+                "issuingState='" + issuingState  + '\n' +
+                "endorsements='" + endorsements  + '\n' +
+                "sex=" + sex  + '\n' +
+                "isOrganDonor=" + organDonor  + '\n' +
+                "federallyCompliant=" + federallyCompliant+ '\n' +
+                "height=" + height  + '\n' +
+                "weight=" + weight  + '\n' +
+                "licenseClassification=" + licenseClassification;
+        return stringValue;
+    }
+
 }

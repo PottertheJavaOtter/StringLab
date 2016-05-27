@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Scanner;
 
 import static org.junit.Assert.*;
 
@@ -20,12 +21,15 @@ public class DriversLicenseTest {
     Date expectedDOB = new Date(); // 3 times
     Date expectedIssueDate = expectedDOB;
     Date expectedExpirationDate = expectedDOB;
-    String licenseNum = "007";
+    String licenseNumber = "007";
     String issuingState = "TX";
-    String trump = "Trump";
-    char male = 'M';
+    String endorsements = "Trump";
+    char sex = 'M';
     boolean federallyCompliantStatus = false;
     char licenseClassification = 'C';
+    boolean organDonor = false;
+    int height = 66;
+    double weight = 167;
 
     @Before
     public void setUp() throws Exception {
@@ -37,12 +41,15 @@ public class DriversLicenseTest {
         testLicense.setDateOfBirth(expectedDOB);
         testLicense.setIssueDate(expectedIssueDate);
         testLicense.setExpirationDate(expectedExpirationDate);
-        testLicense.setLicenseNumber(licenseNum);
+        testLicense.setLicenseNumber(licenseNumber);
         testLicense.setIssuingState(issuingState);
-        testLicense.setEndorsements(trump);
-        testLicense.setSex(male);
+        testLicense.setEndorsements(endorsements);
+        testLicense.setSex(sex);
         testLicense.setFederallyCompliant(federallyCompliantStatus);
         testLicense.setLicenseClassification(licenseClassification);
+        testLicense.setOrganDonor(organDonor);
+        testLicense.setHeight(height);
+        testLicense.setWeight(weight);
     }
 
     @Test
@@ -50,10 +57,10 @@ public class DriversLicenseTest {
 
         String actualCSVResult = testLicense.serializeToCSV();
 
-        String expectedCSVResult = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%c,%b,%c",
+        String expectedCSVResult = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%c,%b,%c,%b,%d,%.1f",
                 name, address, eyeColor, expectedDOB,expectedIssueDate, expectedExpirationDate,
-                licenseNum, issuingState, trump, male, federallyCompliantStatus, licenseClassification);
-
+                licenseNumber, issuingState, endorsements, sex, federallyCompliantStatus, licenseClassification, organDonor,
+                height,weight);
         assertEquals("Actual CSV result did not match expectations.",expectedCSVResult, actualCSVResult);
 
     }
@@ -89,18 +96,34 @@ public class DriversLicenseTest {
     }
     @Test
     public void testDeserializeFromCSV(){
-        String csv = testLicense.serializeToCSV();
+        String csv = testLicense.getCSVHeader()+"\n"+testLicense.serializeToCSV();
         ArrayList<DriversLicense> licenseList = testLicense.deserializeFromCSV(csv);
         DriversLicense actualLicense = licenseList.get(0);
-        assertEquals(name, actualLicense.getName());
-        assertEquals(address, actualLicense.getAddress());
-        assertEquals(eyeColor, actualLicense.getEyeColor());
-        assertEquals(licenseNum, actualLicense.getLicenseNumber());
-        assertEquals(issuingState, actualLicense.getIssuingState());
-        assertEquals(trump, actualLicense.getEndorsements());
-        assertEquals(male, actualLicense.getSex());
-        assertEquals(federallyCompliantStatus, actualLicense.isFederallyCompliant());
-        assertEquals(licenseClassification, actualLicense.getLicenseClassification());
+        System.out.println(testLicense.checkDuplicateLicense(actualLicense));
+        String expected = "DriversLicense\n" +
+                "name='" + name + '\n' +
+                "address='" + address + '\n' +
+                "eyeColor='" + eyeColor  + '\n' +
+                "licenseNumber='" + licenseNumber + '\n' +
+                "issuingState='" + issuingState  + '\n' +
+                "endorsements='" + endorsements  + '\n' +
+                "sex=" + sex  + '\n' +
+                "isOrganDonor=" + organDonor  + '\n' +
+                "federallyCompliant=" + federallyCompliantStatus+ '\n' +
+                "height=" + height  + '\n' +
+                "weight=" + weight  + '\n' +
+                "licenseClassification=" + licenseClassification;
+
+        String actualValue = testLicense.deserializeFromCSV(testLicense.serializeToCSV()).get(0).toString();
+        assertEquals(expected,actualValue);
+    }
+    @Test
+    public void testremoveHeader(){
+        String csv = testLicense.getCSVHeader()+"\n"+testLicense.serializeToCSV();
+        String expectedCSV = testLicense.removeHeader(csv);
+        String actualCSV = testLicense.serializeToCSV();
+        assertEquals(expectedCSV,actualCSV);
 
     }
+
 }
